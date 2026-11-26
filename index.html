@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Latihan CPNS - Mix Otonom SKD &amp; SKB Pranata Komputer</title>
+<style>
+:root { --bg:#0f172a; --card:#1e293b; --line:#334155; --txt:#e2e8f0; --mut:#94a3b8; --acc:#38bdf8; --ok:#4ade80; --bad:#f87171; --warn:#fbbf24; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--txt); line-height:1.55; }
+.wrap { max-width:920px; margin:0 auto; padding:20px 16px 80px; }
+h1 { font-size:1.5rem; margin-bottom:4px; }
+h2 { font-size:1.15rem; margin:22px 0 10px; }
+.sub { color:var(--mut); font-size:.9rem; margin-bottom:18px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px; }
+.row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+button { font:inherit; border:1px solid var(--line); background:#0b1220; color:var(--txt); border-radius:10px; padding:10px 16px; cursor:pointer; }
+button:hover { border-color:var(--acc); }
+button.primary { background:var(--acc); color:#06283d; border-color:var(--acc); font-weight:600; }
+button.danger { border-color:var(--bad); color:var(--bad); }
+button:disabled { opacity:.45; cursor:not-allowed; }
+select { font:inherit; background:#0b1220; color:var(--txt); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+label.chk { color:var(--mut); font-size:.9rem; display:flex; align-items:center; gap:6px; cursor:pointer; }
+.opt { display:block; width:100%; text-align:left; margin:8px 0; padding:12px 14px; background:#0b1220; border:1px solid var(--line); border-radius:10px; cursor:pointer; }
+.opt:hover { border-color:var(--acc); }
+.opt.sel { border-color:var(--acc); background:#123047; }
+.opt.correct { border-color:var(--ok); background:#12331f; }
+.opt.wrong { border-color:var(--bad); background:#3b1414; }
+.opt .lbl { font-weight:700; margin-right:8px; color:var(--acc); }
+.opt svg { max-width:100%; height:auto; display:block; margin:6px 0; }
+.qsvg { background:#f8fafc; border-radius:8px; padding:8px; margin:10px 0; }
+.qsvg svg { max-width:100%; height:auto; display:block; margin:0 auto; }
+.badge { display:inline-block; font-size:.75rem; padding:2px 10px; border-radius:999px; border:1px solid var(--line); color:var(--mut); margin-right:6px; }
+.timer { font-size:1.4rem; font-weight:700; color:var(--warn); font-variant-numeric:tabular-nums; }
+.timer.low { color:var(--bad); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(38px,1fr)); gap:6px; margin:10px 0; }
+.grid button { padding:6px 0; text-align:center; font-size:.82rem; }
+.grid button.done { background:#123047; border-color:var(--acc); }
+.grid button.cur { background:var(--acc); color:#06283d; }
+.scorebar { display:flex; align-items:center; gap:10px; margin:6px 0; }
+.scorebar .bar { flex:1; height:10px; background:#0b1220; border-radius:999px; overflow:hidden; }
+.scorebar .fill { height:100%; background:var(--acc); }
+.pass { color:var(--ok); font-weight:700; }
+.fail { color:var(--bad); font-weight:700; }
+.pemb { background:#0b1220; border-left:3px solid var(--acc); border-radius:8px; padding:12px 14px; margin:12px 0; font-size:.92rem; }
+.muted { color:var(--mut); font-size:.88rem; }
+table.hist { width:100%; border-collapse:collapse; font-size:.88rem; }
+table.hist th, table.hist td { border:1px solid var(--line); padding:6px 10px; text-align:left; }
+.statline { display:flex; gap:14px; flex-wrap:wrap; margin:8px 0; }
+.statline .st { background:#0b1220; border:1px solid var(--line); border-radius:10px; padding:8px 14px; font-size:.85rem; }
+.statline .st b { display:block; font-size:1.25rem; }
+.hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Latihan CPNS 2026 - Mix Otonom</h1>
+  <div class="sub">Soal campur TWK/TIU/TKP/SKB, ganti otomatis setelah dijawab. Yang salah muncul lagi, yang sudah tuntas (benar 2x) keluar antrian, bank terus berputar.</div>
+
+  <div class="card" id="menu">
+    <h2>Mode belajar</h2>
+    <div class="row" style="margin:12px 0">
+      <select id="mode">
+        <option value="mix">Mix Otonom (campur semua, putar terus)</option>
+        <option value="latihan">Latihan per kategori (pembahasan langsung)</option>
+        <option value="simulasi">Simulasi SKD penuh (110 soal, 100 menit)</option>
+        <option value="skb">Simulasi SKB Pranata Komputer</option>
+      </select>
+      <select id="filter">
+        <option value="ALL">Semua kategori</option>
+        <option value="TWK">TWK saja</option>
+        <option value="TIU">TIU saja</option>
+        <option value="TKP">TKP saja</option>
+        <option value="SKB">SKB saja</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="autoadv" checked> Lanjut otomatis</label>
+    </div>
+    <div class="row">
+      <button class="primary" onclick="start()">Mulai belajar</button>
+      <button onclick="refreshBank()">Muat ulang bank soal</button>
+      <button class="danger" onclick="resetProgres()">Reset progres</button>
+    </div>
+    <div class="statline" id="stats"></div>
+    <div class="muted" id="bankinfo"></div>
+  </div>
+
+  <div class="card hidden" id="quiz">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div id="qmeta"></div>
+      <div class="row">
+        <div class="timer" id="timer"></div>
+        <div class="muted" id="mixprog"></div>
+      </div>
+    </div>
+    <div class="grid hidden" id="navgrid"></div>
+    <h2 id="qtext"></h2>
+    <div id="qimg"></div>
+    <div id="qopts"></div>
+    <div class="pemb hidden" id="pemb"></div>
+    <div class="row" style="margin-top:14px">
+      <button onclick="prev()" id="prevBtn">Sebelumnya</button>
+      <button onclick="next()" id="nextBtn">Berikutnya</button>
+      <button onclick="skip()" id="skipBtn">Lompat</button>
+      <button class="primary hidden" id="finishBtn" onclick="finish()">Selesai &amp; Hitung Nilai</button>
+      <button class="hidden" id="stopBtn" onclick="stopMix()">Akhiri sesi mix</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="result">
+    <h2>Hasil</h2>
+    <div id="rbody"></div>
+    <h2>Review jawaban</h2>
+    <div id="rreview"></div>
+    <h2>Catatan skor</h2>
+    <div id="rhist"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="primary" onclick="backToMenu()">Kembali ke menu</button>
+    </div>
+  </div>
+</div>
+
+<script src="bank.js"></script>
+<script>
+let qs = [], idx = 0, answers = {}, timerId = null, advId = null, deadline = 0, mode = 'latihan';
+let mixQueue = [], mixStats = {right:0, wrong:0, skipped:0};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function isSvg(s){ return typeof s === 'string' && s.trim().indexOf('<svg') === 0; }
+function renderMaybeSvg(s){ return isSvg(s) ? s : esc(s); }
+
+// ---- progres belajar (localStorage) ----
+function loadProg(){ return JSON.parse(localStorage.getItem('cpns-prog') || '{}'); }
+function saveProg(p){ localStorage.setItem('cpns-prog', JSON.stringify(p)); }
+function progOf(p, id){ return p[id] || {lvl:0, seen:0, right:0, wrong:0}; }
+function isRight(q, chosen){
+  if (!chosen) return false;
+  if (Array.isArray(q.opsi)) { const o = q.opsi.find(x => x.label === chosen); return !!o && (o.skor||0) >= 4; }
+  return chosen === q.kunci;
+}
+function resetProgres(){
+  if (!confirm('Hapus semua progres belajar tersimpan?')) return;
+  localStorage.removeItem('cpns-prog'); paintStats();
+}
+function refreshBank(){ location.reload(); }
+
+function paintStats(){
+  const b = window.BANK || [], p = loadProg();
+  const byCat = {};
+  for (const q of b) {
+    const c = byCat[q.kategori] = byCat[q.kategori] || {tuntas:0, proses:0, baru:0};
+    const lvl = progOf(p, q.id).lvl;
+    if (lvl >= 2) c.tuntas++; else if (lvl >= 1) c.proses++; else c.baru++;
+  }
+  $('stats').innerHTML = Object.keys(byCat).map(k => {
+    const c = byCat[k];
+    const total = c.tuntas + c.proses + c.baru;
+    return '<div class="st">'+k+'<b>'+c.tuntas+'/'+total+'</b>tuntas / proses '+c.proses+' / baru '+c.baru+'</div>';
+  }).join('') + (b.length ? '' : '<div class="st">Bank kosong</div>');
+}
+
+// ---- antrian mix otonom: campur kategori, yang belum tuntas didahulukan, yang salah diprioritaskan ----
+function buildMixQueue(filter){
+  const b = (window.BANK || []).filter(q => filter === 'ALL' || q.kategori === filter);
+  const p = loadProg();
+  const buckets = {};
+  for (const q of b) {
+    const st = progOf(p, q.id);
+    // prioritas: salah terakhir (streak salah) > belum pernah > lvl rendah; campur random
+    const pri = (st.lvl < 2 ? 0 : 3) + (st.wrong > st.right ? -1 : 0) + Math.random() * 0.9 + st.lvl * 0.5;
+    (buckets[q.kategori] = buckets[q.kategori] || []).push({q, pri});
+  }
+  for (const k of Object.keys(buckets)) buckets[k].sort((a, b2) => a.pri - b2.pri);
+  // round-robin antar kategori supaya ganti-ganti terus
+  const out = [], keys = Object.keys(buckets);
+  let added = true;
+  while (added) {
+    added = false;
+    for (const k of keys) if (buckets[k].length) { out.push(buckets[k].shift().q); added = true; }
+  }
+  return out;
+}
+
+function start(){
+  mode = $('mode').value;
+  const f = $('filter').value;
+  let pool = (window.BANK || []).slice();
+  if (mode === 'simulasi') pool = pool.filter(q => q.kategori !== 'SKB');
+  else if (mode === 'skb') pool = pool.filter(q => q.kategori === 'SKB');
+  else if (mode !== 'mix' && f !== 'ALL') pool = pool.filter(q => q.kategori === f);
+  if (!pool.length) { $('bankinfo').textContent = 'Bank soal kosong. Jalankan node build-bank.js dulu.'; return; }
+  if (mode === 'mix') {
+    mixQueue = buildMixQueue(f);
+    if (!mixQueue.length) { $('bankinfo').textContent = 'Tidak ada soal untuk filter itu.'; return; }
+    qs = mixQueue; mixStats = {right:0, wrong:0, skipped:0};
+  } else {
+    qs = pool;
+  }
+  idx = 0; answers = {};
+  clearInterval(timerId); clearTimeout(advId);
+  $('menu').classList.add('hidden'); $('result').classList.add('hidden'); $('quiz').classList.remove('hidden');
+  $('navgrid').classList.toggle('hidden', mode !== 'simulasi');
+  $('finishBtn').classList.toggle('hidden', mode !== 'simulasi' && mode !== 'skb');
+  $('stopBtn').classList.toggle('hidden', mode !== 'mix');
+  $('skipBtn').classList.toggle('hidden', mode === 'simulasi');
+  $('timer').textContent = '';
+  if (mode === 'simulasi') { deadline = Date.now() + 100*60*1000; timerId = setInterval(tick, 1000); buildGrid(); }
+  render();
+}
+function tick(){
+  const left = Math.max(0, deadline - Date.now());
+  const m = Math.floor(left/60000), s = Math.floor(left%60000/1000);
+  $('timer').textContent = m + ':' + String(s).padStart(2,'0');
+  $('timer').classList.toggle('low', left < 5*60*1000);
+  if (left <= 0) { clearInterval(timerId); finish(); }
+}
+function buildGrid(){ $('navgrid').innerHTML = qs.map((q,i) => '<button id="g'+i+'" onclick="jump('+i+')">'+(i+1)+'</button>').join(''); }
+function jump(i){ idx = i; render(); }
+
+function render(){
+  const q = qs[idx];
+  $('qmeta').innerHTML = '<span class="badge">'+esc(q.kategori)+'</span><span class="badge">'+esc(q.topik||'')+'</span><span class="badge">Soal '+(idx+1)+' / '+qs.length+'</span>';
+  $('mixprog').textContent = mode === 'mix' ? ('Benar '+mixStats.right+' | Salah '+mixStats.wrong+' | Lompat '+mixStats.skipped) : '';
+  $('qtext').textContent = q.soal;
+  $('qimg').innerHTML = q.svg ? '<div class="qsvg">'+q.svg+'</div>' : '';
+  const opts = Array.isArray(q.opsi) ? q.opsi : ['A','B','C','D','E'].map(k => ({label:k, teks:q.opsi[k]}));
+  $('qopts').innerHTML = opts.map(o => {
+    const val = o.teks !== undefined ? o.teks : q.opsi[o.label];
+    const cls = ['opt'];
+    if (answers[q.id] === o.label) cls.push('sel');
+    if (answers[q.id] && mode !== 'simulasi') {
+      if (o.label === q.kunci) cls.push('correct');
+      else if (answers[q.id] === o.label) cls.push('wrong');
+    }
+    return '<button class="'+cls.join(' ')+'" onclick="pick(\''+q.id+'\',\''+o.label+'\')"><span class="lbl">'+o.label+'.</span>'+renderMaybeSvg(val)+'</button>';
+  }).join('');
+  const pemb = $('pemb');
+  if (mode !== 'simulasi' && answers[q.id]) {
+    pemb.classList.remove('hidden');
+    const sk = Array.isArray(q.opsi) ? ' (skor pilihanmu: '+((q.opsi.find(o=>o.label===answers[q.id])||{skor:0}).skor)+'/5)' : '';
+    pemb.innerHTML = '<b>Kunci: '+esc(q.kunci)+'</b>'+sk+'<br>'+esc(q.pembahasan);
+  } else pemb.classList.add('hidden');
+  $('prevBtn').disabled = idx === 0;
+  $('nextBtn').disabled = idx >= qs.length-1;
+  if (mode !== 'mix') {
+    for (let i=0;i<qs.length;i++){ const g = $('g'+i); if (g) { g.classList.toggle('done', !!answers[qs[i].id]); g.classList.toggle('cur', i === idx); } }
+    $('finishBtn').classList.toggle('hidden', idx !== qs.length-1);
+  }
+}
+
+function pick(id, label){
+  if (answers[id]) return;
+  const q = qs[idx];
+  answers[id] = label;
+  const p = loadProg(), st = progOf(p, id);
+  const right = isRight(q, label);
+  st.seen++; if (right) { st.right++; st.lvl = Math.min(2, st.lvl + 1); } else { st.wrong++; st.lvl = Math.max(0, st.lvl - 1); }
+  p[id] = st; saveProg(p);
+  if (mode === 'mix') { right ? mixStats.right++ : mixStats.wrong++; paintStats(); }
+  render();
+  if (mode === 'mix' && $('autoadv').checked) { clearTimeout(advId); advId = setTimeout(() => mixNext(), 1800); }
+}
+function mixNext(){
+  if (mode !== 'mix') return;
+  const p = loadProg();
+  // buang soal yang sudah tuntas (benar 2x) dari antrian depan; yang belum muncul lagi belakangan
+  let nextI = -1;
+  for (let i = idx + 1; i < qs.length; i++) if (progOf(p, qs[i].id).lvl < 2) { nextI = i; break; }
+  if (nextI === -1) {
+    // habis satu putaran: susun ulang antrian dari soal yang belum tuntas + yang salah (otomatis ganti-ganti terus)
+    const rebuilt = buildMixQueue($('filter').value).filter(q => progOf(p, q.id).lvl < 2);
+    if (rebuilt.length) {
+      qs = rebuilt; idx = 0; answers = {};
+    } else {
+      // semua tuntas: putar ulang semua supaya tetap belajar (acak)
+      qs = buildMixQueue($('filter').value); idx = 0; answers = {};
+    }
+  } else idx = nextI;
+  render();
+}
+function next(){
+  clearTimeout(advId);
+  if (mode === 'mix') { mixNext(); return; }
+  if (idx < qs.length-1) { idx++; render(); } else if (mode === 'latihan') finish();
+}
+function prev(){ clearTimeout(advId); if (idx > 0) { idx--; render(); } }
+function skip(){
+  if (mode === 'mix') { mixStats.skipped++; mixNext(); }
+  else if (idx < qs.length-1) { idx++; render(); }
+}
+function stopMix(){
+  clearTimeout(advId);
+  const b = window.BANK || [], p = loadProg();
+  let tuntas = 0; for (const q of b) if (progOf(p, q.id).lvl >= 2) tuntas++;
+  $('rbody').innerHTML = '<p><b>Sesi mix diakhiri.</b> Benar '+mixStats.right+' | Salah '+mixStats.wrong+' | Lompat '+mixStats.skipped+'.</p><p>Tuntas saat ini: '+tuntas+' dari '+b.length+' soal. Progres tersimpan otomatis - lanjut kapan saja.</p>';
+  $('rreview').innerHTML = '';
+  const hist = JSON.parse(localStorage.getItem('cpns-hist') || '[]');
+  hist.unshift({t:new Date().toLocaleString('id-ID'), mode:'mix', twk:mixStats.right, tiu:mixStats.wrong, tkp:mixStats.skipped, skb:0, total:tuntas});
+  localStorage.setItem('cpns-hist', JSON.stringify(hist.slice(0,20)));
+  $('rhist').innerHTML = '<table class="hist"><tr><th>Waktu</th><th>Mode</th><th>Benar</th><th>Salah</th><th>Lompat</th><th>Tuntas</th></tr>' + hist.map(h => '<tr><td>'+esc(h.t)+'</td><td>'+esc(h.mode)+'</td><td>'+h.twk+'</td><td>'+h.tiu+'</td><td>'+h.tkp+'</td><td>'+h.total+'</td></tr>').join('') + '</table>';
+  $('quiz').classList.add('hidden'); $('result').classList.remove('hidden');
+}
+
+function scoreOf(q, chosen){
+  if (!chosen) return 0;
+  if (Array.isArray(q.opsi)) { const o = q.opsi.find(x => x.label === chosen); return o ? (o.skor||0) : 0; }
+  return chosen === q.kunci ? 5 : 0;
+}
+function finish(){
+  clearInterval(timerId); clearTimeout(advId);
+  const cat = {TWK:{s:0},TIU:{s:0},TKP:{s:0},SKB:{s:0}};
+  let wrong = [];
+  for (const q of qs) {
+    const c = cat[q.kategori]; if (!c) continue;
+    c.s += scoreOf(q, answers[q.id]);
+    if (answers[q.id] !== q.kunci) wrong.push(q);
+  }
+  const tb = cat.TWK.s, ti = cat.TIU.s, tk = cat.TKP.s, sb = cat.SKB.s;
+  let html = '';
+  for (const [n,v,max,pass] of [['TWK',tb,150,65],['TIU',ti,175,80],['TKP',tk,225,166]]) {
+    html += '<div class="scorebar"><b style="width:52px">'+n+'</b><div class="bar"><div class="fill" style="width:'+Math.round(v/max*100)+'%"></div></div><span style="width:110px">'+v+' / '+max+' '+(v>=pass?'<span class="pass">LOLOS</span>':'<span class="fail">belum</span>')+'</span></div>';
+  }
+  if (mode !== 'simulasi') html += '<div class="scorebar"><b style="width:52px">SKB</b><div class="bar"><div class="fill" style="width:'+Math.round(sb/400*100)+'%"></div></div><span style="width:110px">'+sb+' / 400</span></div>';
+  const total = mode === 'simulasi' ? (tb+ti+tk) : (tb+ti+tk+sb);
+  html += '<p style="margin-top:12px"><b>Total: '+total+'</b>' + (mode==='simulasi' ? ' (target aman 380+)' : '') + '. Salah/tidak terjawab: '+wrong.length+' dari '+qs.length+'.</p>';
+  $('rbody').innerHTML = html;
+  $('rreview').innerHTML = wrong.length ? wrong.map((q,i) =>
+    '<div class="pemb"><b>'+(i+1)+'. ['+esc(q.kategori)+' - '+esc(q.topik||'')+']</b> '+esc(q.soal)+'<br><br><b>Kunci: '+esc(q.kunci)+'</b> | Jawabanmu: '+esc(answers[q.id]||'-')+'<br>'+esc(q.pembahasan)+'</div>'
+  ).join('') : '<p class="muted">Tidak ada yang salah. Mantap.</p>';
+  const hist = JSON.parse(localStorage.getItem('cpns-hist') || '[]');
+  hist.unshift({t:new Date().toLocaleString('id-ID'), mode, twk:tb, tiu:ti, tkp:tk, skb:sb, total});
+  localStorage.setItem('cpns-hist', JSON.stringify(hist.slice(0,20)));
+  $('rhist').innerHTML = '<table class="hist"><tr><th>Waktu</th><th>Mode</th><th>TWK</th><th>TIU</th><th>TKP</th><th>SKB</th><th>Total</th></tr>' + hist.map(h => '<tr><td>'+esc(h.t)+'</td><td>'+esc(h.mode)+'</td><td>'+h.twk+'</td><td>'+h.tiu+'</td><td>'+h.tkp+'</td><td>'+h.skb+'</td><td>'+h.total+'</td></tr>').join('') + '</table>';
+  $('quiz').classList.add('hidden'); $('result').classList.remove('hidden');
+}
+function backToMenu(){ $('result').classList.add('hidden'); $('menu').classList.remove('hidden'); paintStats(); }
+
+(function init(){
+  const b = window.BANK || [];
+  const c = {};
+  for (const q of b) c[q.kategori] = (c[q.kategori]||0)+1;
+  $('bankinfo').textContent = b.length ? ('Bank: '+b.length+' soal ('+Object.keys(c).map(k=>k+' '+c[k]).join(', ')+')') : 'Bank soal belum ada. Jalankan: node build-bank.js';
+  paintStats();
+})();
+</script>
+</body>
+</html>
